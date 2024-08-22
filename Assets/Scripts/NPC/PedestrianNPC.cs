@@ -1,16 +1,15 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering.Universal;
 
 public class PedestrianNPC : NPC
 {
-    [SerializeField] private bool isIdle;
-
-    enum State
+    public enum State
     {
         Idle,
         Patrolling,
-        Running
+        Fleeing
     }
 
     [SerializeField] private State state = State.Idle;
@@ -18,7 +17,7 @@ public class PedestrianNPC : NPC
 
     //Flee
     [Header("Flee")]
-    [SerializeField] private float fleeTime;
+    [SerializeField] private float fleeDuration;
     [SerializeField] private float fleeSpeed;
     [SerializeField] private float fleeDistance;
 
@@ -46,26 +45,21 @@ public class PedestrianNPC : NPC
     private void Start()
     {
         state = State.Patrolling;
+        agent.speed = normalSpeed;
 
         mesh = new Mesh();
         meshFilter.mesh = mesh;
-
-        startedPoint = transform.position;
     }
 
     private void Update()
     {
-        //if (isIdle)
-        //    state = State.Idle;
-        //else
-        //    state = State.Patrolling;
-
         dogDetect();
 
         if (prevState == state)
             return;
 
         prevState = state;
+        UIController.instance.ChangedControlBtn(state);
 
         switch (state)
         {
@@ -77,7 +71,7 @@ public class PedestrianNPC : NPC
                 Patrolling();
                 break;
 
-            case State.Running:
+            case State.Fleeing:
                 Fleeing(fleeTarget);
                 break;
 
@@ -89,11 +83,27 @@ public class PedestrianNPC : NPC
     //Idle
     private void Idle()
     {
+        StopAllCoroutines();
+        fleeTarget = null;
+
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
+
+        fovColor.color = normalColor;
+        fovColor.ApplyColor();
+
+        nearbyViewColor.color = normalColor / 2;
+        nearbyViewColor.ApplyColor();
+
     }
 
-    private Vector3 startedPoint;
+    public void ChangedIdle()
+    {
+        if (state != State.Idle)
+            state = State.Idle;
+        else
+            BackToPatrol();
+    }
 
     //Patrolling
     protected override void Patrolling()
@@ -105,6 +115,7 @@ public class PedestrianNPC : NPC
 
         nearbyViewColor.color = normalColor / 2;
         nearbyViewColor.ApplyColor();
+
     }
 
     protected override IEnumerator WaitUntilReach()
@@ -112,7 +123,7 @@ public class PedestrianNPC : NPC
         yield return new WaitForSeconds(0.025f);
         yield return new WaitUntil(() => agent.remainingDistance <= agent.stoppingDistance);
 
-        if (state == State.Running)
+        if (state == State.Fleeing)
         {
             if (Vector3.Distance(transform.position, fleeTarget.position) > fleeDistance * 2)
             {
@@ -202,7 +213,7 @@ public class PedestrianNPC : NPC
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Dog"))
         {
-            if (state == State.Running)
+            if (state == State.Fleeing)
             {
                 KeepFleeing();
 
@@ -215,7 +226,7 @@ public class PedestrianNPC : NPC
 
             else
             {
-                state = State.Running;
+                state = State.Fleeing;
                 fleeTarget = other.transform;
             }
         }
@@ -269,6 +280,7 @@ public class PedestrianNPC : NPC
             fleeingPoint = transform.position;
         }
 
+        agent.isStopped = false;
         agent.speed = fleeSpeed;
         agent.velocity = Vector3.zero;
         Move(fleeingPoint);
@@ -300,7 +312,8 @@ public class PedestrianNPC : NPC
         if (fleeCoroutine != null)
             StopCoroutine(fleeCoroutine);
 
-        agent.speed = speed;
+        fleeTarget = null;
+        agent.speed = normalSpeed;
 
         Move(NearbyWayPoint());
         state = State.Patrolling;
@@ -308,7 +321,34 @@ public class PedestrianNPC : NPC
 
     IEnumerator FleeingCountdown()
     {
-        yield return new WaitForSeconds(fleeTime);
+        yield return new WaitForSeconds(fleeDuration);
         BackToPatrol();
+    }
+
+    //Variable Set
+    public void Set_NormalSpeed(float speed)
+    {
+        normalSpeed = speed;
+
+        if (state  != State.Fleeing)
+            agent.speed = normalSpeed;
+    }
+
+    public void Set_FleeingSpeed(float speed)
+    {
+        fleeSpeed = speed;
+
+        if (state == State.Fleeing)
+            agent.speed = fleeSpeed;
+    }
+
+    public void Set_FleeingDuration(float duration)
+    {
+        fleeDuration = duration;
+    }
+
+    public void Set_ViewDistance(float viewDistance)
+    {
+        this.viewDistance = viewDistance;
     }
 }

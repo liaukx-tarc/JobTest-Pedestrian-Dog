@@ -7,7 +7,7 @@ public class NPC : MonoBehaviour
 {
 
     [SerializeField] protected Transform[] waypoints;
-    [SerializeField] protected float speed;
+    [SerializeField] protected float normalSpeed;
 
     protected NavMeshAgent agent;
     protected Queue<Vector3> waypointsQueue;
@@ -19,7 +19,6 @@ public class NPC : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
 
         waypointsQueue = new Queue<Vector3>();
-        agent.speed = speed;
 
         foreach (Transform waypoint in waypoints)
         {

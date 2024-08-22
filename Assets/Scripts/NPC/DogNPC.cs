@@ -9,7 +9,8 @@ public class DogNPC : NPC
     {
         Idle,
         Recovering,
-        Patrolling,
+        Walk,
+        Running
     }
 
     private State state = State.Idle;
@@ -19,8 +20,8 @@ public class DogNPC : NPC
     [SerializeField] private bool hasStamina;
 
     [SerializeField] private float runSpeed = 25;
-    [SerializeField] private float staminaDecrease = 0.1f;
-    [SerializeField] private float staminaIncrease = 0.2f;
+    [SerializeField] private float staminaReduce = 0.1f;
+    [SerializeField] private float staminaRecover = 0.2f;
 
     public float stamina = 100;
     private Coroutine staminaCoroutine;
@@ -29,11 +30,14 @@ public class DogNPC : NPC
 
     private void Start()
     {
-        state = State.Patrolling;
-
         if (hasStamina)
         {
-            agent.speed = runSpeed;
+            state = State.Running;
+        }
+        else
+        {
+            state = State.Walk;
+            agent.speed = normalSpeed;
         }
     }
 
@@ -50,8 +54,12 @@ public class DogNPC : NPC
                 Idle();
                 break;
 
-            case State.Patrolling:
+            case State.Walk:
                 Patrolling();
+                break;
+
+            case State.Running:
+                Running();
                 break;
 
             case State.Recovering:
@@ -68,6 +76,19 @@ public class DogNPC : NPC
     {
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
+    }
+
+    //Running
+    private void Running()
+    {
+        agent.isStopped = false;
+        agent.speed = runSpeed;
+
+        //Start Coroutine to check destination reach
+        if (reachCoroutine != null)
+            StopCoroutine(reachCoroutine);
+
+        reachCoroutine = StartCoroutine(WaitUntilReach());
     }
 
     protected override void Move(Vector3 destination)
@@ -87,7 +108,7 @@ public class DogNPC : NPC
     {
         do
         {
-            stamina = Mathf.Max(stamina - staminaDecrease, 0); ;
+            stamina = Mathf.Max(stamina - staminaReduce, 0); ;
             staminaFieldTrans.sizeDelta = new Vector2(Mathf.Lerp(0, 6, stamina / 100f), 0);
             yield return new WaitForFixedUpdate();
 
@@ -112,13 +133,40 @@ public class DogNPC : NPC
     {
         do
         {
-            stamina = Mathf.Min(stamina + staminaIncrease, 100);
+            stamina = Mathf.Min(stamina + staminaRecover, 100);
             staminaFieldTrans.sizeDelta = new Vector2(Mathf.Lerp(0, 6, stamina / 100f), 0);
             yield return new WaitForFixedUpdate();
 
         } while (stamina != 100);
 
         //Return to patrol
-        state = State.Patrolling;
+        state = State.Running;
+    }
+
+    //Variable Set
+    public void Set_NormalSpeed(float speed)
+    {
+        normalSpeed = speed;
+
+        if (!hasStamina)
+            agent.speed = normalSpeed;
+    }
+
+    public void Set_RunSpeed(float speed)
+    {
+        runSpeed = speed;
+
+        if (hasStamina)
+            agent.speed = runSpeed;
+    }
+
+    public void Set_StaminaReduce(float staminaReduce)
+    {
+        this.staminaReduce = staminaReduce;
+    }
+
+    public void Set_StaminaRecover(float staminaRecover)
+    {
+        this.staminaRecover = staminaRecover;
     }
 }
