@@ -7,17 +7,19 @@ public class NPC : MonoBehaviour
 {
 
     [SerializeField] protected Transform[] waypoints;
+    [SerializeField] protected float speed;
 
     protected NavMeshAgent agent;
     protected Queue<Vector3> waypointsQueue;
 
-    private Coroutine patrolCoroutine;
+    protected Coroutine reachCoroutine;
 
     protected virtual void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
 
         waypointsQueue = new Queue<Vector3>();
+        agent.speed = speed;
 
         foreach (Transform waypoint in waypoints)
         {
@@ -34,10 +36,10 @@ public class NPC : MonoBehaviour
         agent.isStopped = false;
         
         //Start Coroutine to check destination reach
-        if (patrolCoroutine != null)
-            StopCoroutine(patrolCoroutine);
+        if (reachCoroutine != null)
+            StopCoroutine(reachCoroutine);
 
-        patrolCoroutine = StartCoroutine(WaitUntilReach());
+        reachCoroutine = StartCoroutine(WaitUntilReach());
     }
 
     protected virtual Vector3 NearbyWayPoint()

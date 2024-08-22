@@ -5,7 +5,7 @@ using UnityEngine;
 public class CustomMaterialColor : MonoBehaviour
 {
     [SerializeField] private Material originMaterial;
-    [Space][SerializeField] private Color color;
+    [Space]public Color color;
 
     private void Awake()
     {

@@ -89,7 +89,7 @@ public class DogNPC : NPC
         {
             stamina = Mathf.Max(stamina - staminaDecrease, 0); ;
             staminaFieldTrans.sizeDelta = new Vector2(Mathf.Lerp(0, 6, stamina / 100f), 0);
-            yield return null;
+            yield return new WaitForFixedUpdate();
 
         } while (stamina > 0);
 
@@ -114,7 +114,7 @@ public class DogNPC : NPC
         {
             stamina = Mathf.Min(stamina + staminaIncrease, 100);
             staminaFieldTrans.sizeDelta = new Vector2(Mathf.Lerp(0, 6, stamina / 100f), 0);
-            yield return null;
+            yield return new WaitForFixedUpdate();
 
         } while (stamina != 100);
 
