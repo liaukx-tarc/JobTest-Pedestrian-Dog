@@ -89,19 +89,11 @@ public class DogNPC : NPC
             StopCoroutine(reachCoroutine);
 
         reachCoroutine = StartCoroutine(WaitUntilReach());
-    }
 
-    protected override void Move(Vector3 destination)
-    {
-        base.Move(destination);
+        if (staminaCoroutine != null)
+            StopCoroutine(staminaCoroutine);
 
-        if (hasStamina)
-        {
-            if (staminaCoroutine != null)
-                StopCoroutine(staminaCoroutine);
-
-            staminaCoroutine = StartCoroutine(StaminaCheck());
-        }
+        staminaCoroutine = StartCoroutine(StaminaCheck());
     }
 
     IEnumerator StaminaCheck()

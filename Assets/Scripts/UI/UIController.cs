@@ -3,6 +3,7 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.Rendering.DebugUI;
 
 public class UIController : MonoBehaviour
 {
@@ -128,13 +129,17 @@ public class UIController : MonoBehaviour
 
     public void OnDogChanged_StaminaReduce()
     {
-        dog_StaminaReduce.num.text = dog_StaminaReduce.slider.value.ToString();
-        GameController.instance.OnDogChanged_StaminaReduce(dog_StaminaReduce.slider.value);
+        float value = (float)Math.Round(dog_StaminaReduce.slider.value, 1);
+        dog_StaminaReduce.num.text = value.ToString();
+        dog_StaminaReduce.slider.value = value;
+        GameController.instance.OnDogChanged_StaminaReduce(value);
     }
 
     public void OnDogChanged_StaminaRecover()
     {
-        dog_StaminaRecover.num.text = dog_StaminaRecover.slider.value.ToString();
-        GameController.instance.OnDogChanged_StaminaRecover(dog_StaminaRecover.slider.value);
+        float value = (float)Math.Round(dog_StaminaRecover.slider.value, 1);
+        dog_StaminaRecover.num.text = value.ToString();
+        dog_StaminaRecover.slider.value= value;
+        GameController.instance.OnDogChanged_StaminaRecover(value);
     }
 }
